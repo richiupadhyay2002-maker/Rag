@@ -1,14 +1,25 @@
+import os
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
 
-persistent_directory = "db/chroma_db"
+persistent_directory = "./chroma_db"
+
+# Get API key and choose embedding model
+api_key = os.getenv("OPENAI_API_KEY")
+is_valid_key = api_key and api_key.strip() and api_key.startswith("sk-") and len(api_key) > 20
+
+if is_valid_key:
+    print("Using OpenAI embeddings...")
+    embedding_model = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=api_key)
+else:
+    print("No valid OpenAI API key found. Using free HuggingFace embeddings...")
+    embedding_model = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # Load embeddings and vector store
-embedding_model = OpenAIEmbeddings(model="text-embedding-3-small")
-
 db = Chroma(
     persist_directory=persistent_directory,
     embedding_function=embedding_model,
