@@ -23,7 +23,8 @@ def load_documents(docs_path="docs"):
     loader = DirectoryLoader(
         docs_path, 
         glob="*.txt", 
-        loader_cls=TextLoader
+        loader_cls=TextLoader,
+        loader_kwargs={'encoding': 'utf-8'}
         )
     documents = loader.load()
     if len(documents) == 0:
