@@ -3,9 +3,11 @@ from langchain_community.document_loaders import TextLoader ,  DirectoryLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain_chroma import Chroma
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 
 
@@ -77,13 +79,22 @@ def main():
     if len(chunks) > 0:
         print("\nCreating embeddings and vector database...")
         
-        # Check if API key is set
+        # Get API key from environment
         api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key or "your-" in api_key or "api-key-here" in api_key:
-            raise ValueError("OPENAI_API_KEY not found in .env file. Please add your actual API key.")
         
-        # Create embeddings
-        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        # Check if API key is valid (OpenAI keys start with 'sk-')
+        is_valid_key = api_key and api_key.strip() and api_key.startswith("sk-") and len(api_key) > 20
+        
+        if is_valid_key:
+            # Use OpenAI embeddings if API key is available
+            print("Using OpenAI embeddings...")
+            embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+        else:
+            # Use free HuggingFace embeddings as fallback
+            print("No valid OpenAI API key found. Using free HuggingFace embeddings...")
+            embeddings = HuggingFaceEmbeddings(
+                model_name="sentence-transformers/all-MiniLM-L6-v2"
+            )
         
         # Create and persist vector database
         persist_directory = "./chroma_db"
